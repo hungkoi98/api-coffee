@@ -10,7 +10,6 @@ class ProcurementCreate(BaseModel):
     total_amount: float
     amount_paid: float
     payment_methods: int
-    customer_type: int
 
     class Config:
         from_attributes = True
