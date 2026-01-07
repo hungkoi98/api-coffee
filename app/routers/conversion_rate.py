@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 router = APIRouter(prefix="/conversion", tags=["conversion"])
 
 @router.get("/")
-def tinh_thanh(do_nguyen:int, do_le:int, khoi_luong: float, gia_nhan: float):
+def tinh_thanh(khoi_luong_vao:int, do_am:float, khoi_luong: float, gia_nhan: float):
     trong_luong = 0
     table = {
         15: [0, 0.1, 0.2, 0.37, 0.47, 0.57, 0.67, 0.77, 0.88, 0.99],
@@ -17,8 +17,9 @@ def tinh_thanh(do_nguyen:int, do_le:int, khoi_luong: float, gia_nhan: float):
         23: [13.9, 14.1, 14.35, 14.6, 14.9, 15.2, 15.2, 16, 16.1, 16.4],
         24: [16.7, 17, 17.35, 17.7, 18.05, 18.4, 18.75, 19, 19.5, 19.8],
     }
-    row = do_nguyen
-    col = do_le
+    row = int(do_am)
+    col = int((do_am - row) * 10)
+
     if row in table and 0 <= col <= 9:
         trong_luong = table[row][col]
         print("Kết quả:", trong_luong)
@@ -27,6 +28,6 @@ def tinh_thanh(do_nguyen:int, do_le:int, khoi_luong: float, gia_nhan: float):
 
     ty_trong = trong_luong*khoi_luong/100
     hieu_ty_trong = khoi_luong - ty_trong
-    thanh = 1000 / hieu_ty_trong
+    thanh = khoi_luong_vao / hieu_ty_trong
     gia_tuoi = gia_nhan / thanh
     return  {"trong_luong":trong_luong,"ty_trong": ty_trong,"hieu_ty_trong": hieu_ty_trong,"thanh":thanh,"gia_tuoi": gia_tuoi}
