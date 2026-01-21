@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import crud
 
@@ -26,7 +28,7 @@ def create_procurement(procurement: ProcurementCreate, db: Session = Depends(get
         if not customer:
             customer = Customer(
                 customer_name = procurement.customer_name,
-                phone_number = procurement.phone_number,
+                phone_number = procurement.customer_phone,
             )
             db.add(customer)
             db.commit()
@@ -41,12 +43,13 @@ def create_procurement(procurement: ProcurementCreate, db: Session = Depends(get
         db.commit()
         db.refresh(new_transaction)
 
-        voucher_no = 'Tiền mặt' if procurement.payment_methods == 0 else 'Chuyển khoản'
+        voucher_no = generate_invoice_code(customer.customer_id)
+        payment_method = 'Tiền mặt' if procurement.payment_methods == 0 else 'Chuyển khoản'
         new_payment = Payment(
             customer_id = customer.customer_id,
             amount = procurement.amount_paid,
             voucher_no =voucher_no,
-            payment_method = procurement.payment_methods,
+            payment_method = payment_method,
         )
         db.add(new_payment)
         db.commit()
@@ -69,7 +72,11 @@ def create_procurement(procurement: ProcurementCreate, db: Session = Depends(get
             "data": procurement
         }
     except Exception as e:
-        return {
-            "status": 400,
-            "message": e,
-        }
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+def generate_invoice_code(customer_id: int) -> str:
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    return f"HDMB{customer_id}_{timestamp}"

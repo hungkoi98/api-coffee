@@ -10,7 +10,7 @@ class Customer(Base):
 
     customer_id = Column(Integer, primary_key=True, index=True)
     customer_name = Column(String(50), unique=True, nullable=False)
-    phone_number = Column(Integer, nullable=False)
+    phone_number = Column(String(50), nullable=True)
     note = Column(String(255), nullable=True)
     created_at = Column(
         DateTime,
@@ -61,3 +61,9 @@ class DailyExpenses(Base):
         DateTime,
         default=datetime.datetime.utcnow
     )
+
+class CashCategory(Base):
+    __tablename__ = "cash_categories"
+    category_id = Column(Integer, primary_key=True, index=True)
+    category_type = Column(String(2), nullable=False)
+    category_name = Column(String(100), nullable=True)
