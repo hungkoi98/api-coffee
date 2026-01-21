@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import crud
+
 from app.database import SessionLocal
-from app.models.model import Transaction, Payment, Customer
+from app.models.model import CustomerPurchase, Payment, Customer, DailyExpenses
 from app.schemas.customer import CustomerResponse
 from app.schemas.procurement import ProcurementCreate
 
@@ -18,35 +20,56 @@ def get_db():
 def create_procurement(procurement: ProcurementCreate, db: Session = Depends(get_db)):
     # ví dụ: insert DB (ở đây mock data)
     customer_id : int
-    customer = db.query(Customer).filter(Customer.customer_name == procurement.customer_name).first()
-    if not customer:
-        customer = Customer(
-            customer_name = procurement.customer_name,
-            phone_number = procurement.phone_number,
-        )
-        db.add(customer)
-        db.commit()
-        db.refresh(customer)
-    new_transaction = Transaction(
-        customer_id = customer.customer_id,
-        quantity = procurement.total_kg,
-        unit_price = procurement.unit_price,
-        total_amount = procurement.total_amount,
-    )
-    db.add(new_transaction)
-    db.commit()
-    db.refresh(new_transaction)
+    try:
 
-    new_payment = Payment(
-        customer_id = customer.customer_id,
-        paid_amount = procurement.amount_paid,
-    )
-    db.add(new_payment)
-    db.commit()
-    db.refresh(new_payment)
-    print(procurement)
-    return {
-        "status": "success",
-        "message": "Nhập hàng thành công",
-        "data": procurement
-    }
+        customer = db.query(Customer).filter(Customer.customer_name == procurement.customer_name).first()
+        if not customer:
+            customer = Customer(
+                customer_name = procurement.customer_name,
+                phone_number = procurement.phone_number,
+            )
+            db.add(customer)
+            db.commit()
+            db.refresh(customer)
+        new_transaction = CustomerPurchase(
+            customer_id = customer.customer_id,
+            quantity_kg = procurement.total_kg,
+            unit_price = procurement.unit_price,
+            total_amount = procurement.total_amount,
+        )
+        db.add(new_transaction)
+        db.commit()
+        db.refresh(new_transaction)
+
+        voucher_no = 'Tiền mặt' if procurement.payment_methods == 0 else 'Chuyển khoản'
+        new_payment = Payment(
+            customer_id = customer.customer_id,
+            amount = procurement.amount_paid,
+            voucher_no =voucher_no,
+            payment_method = procurement.payment_methods,
+        )
+        db.add(new_payment)
+        db.commit()
+        db.refresh(new_payment)
+
+        cash_type = 'TM' if procurement.payment_methods == 0 else 'CK'
+        new_daily_expenses = DailyExpenses(
+            category_id=7,
+            amount=procurement.amount_paid,
+            cash_type=cash_type,
+        )
+        db.add(new_daily_expenses)
+        db.commit()
+        db.refresh(new_daily_expenses)
+
+        print(procurement)
+        return {
+            "status": "success",
+            "message": "Nhập hàng thành công",
+            "data": procurement
+        }
+    except Exception as e:
+        return {
+            "status": 400,
+            "message": e,
+        }
