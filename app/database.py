@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 password = quote_plus("hugnkoi98@#")
 DATABASE_URL = (
     f"mssql+pyodbc://hung_admin:{password}"
-    f"@hungmssql.database.windows.net:1433/qlkh_coffee_production"
+    f"@hungmssql.database.windows.net:1433/qlkh"
     "?driver=ODBC+Driver+17+for+SQL+Server"
     "&Encrypt=yes"
     "&TrustServerCertificate=no"
