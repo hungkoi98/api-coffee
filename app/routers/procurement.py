@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import crud
 
@@ -24,7 +25,7 @@ def create_procurement(procurement: ProcurementCreate, db: Session = Depends(get
     customer_id : int
     try:
 
-        customer = db.query(Customer).filter(Customer.customer_name == procurement.customer_name).first()
+        customer = db.query(Customer).filter(func.lower(Customer.customer_name) == procurement.customer_name.lower()).first()
         if not customer:
             customer = Customer(
                 customer_name = procurement.customer_name,
